@@ -1,10 +1,10 @@
-TESTS = test_timer
+TESTS = test_timer test_clock
 
 UTIL_OBJS=btree.o chipinfo.o ctrlc.o dis.o expr.o list.o opdb.o output.o stab.o util.o vector.o
 DRIVERS_OBJS=device.o
 
 CFLAGS=-ggdb -I../../simio -I../../drivers -I../../util
-LIBS=-lpthread
+LIBS=-lpthread -lm
 
 OBJS+=$(foreach obj, $(UTIL_OBJS), ../../util/$(obj))
 OBJS+=$(foreach obj, $(DRIVERS_OBJS), ../../drivers/$(obj))

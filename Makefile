@@ -101,7 +101,7 @@ GCC_CFLAGS = -O1 -Wall -Wno-char-subscripts -ggdb
 CONFIG_CFLAGS = -DLIB_DIR=\"$(LIBDIR)\"
 
 MSPDEBUG_LDFLAGS = $(LDFLAGS) $(PORTS_LDFLAGS)
-MSPDEBUG_LIBS = -L. -lusb $(READLINE_LIBS) $(OS_LIBS)
+MSPDEBUG_LIBS = -L. -lusb $(READLINE_LIBS) $(OS_LIBS) -lm
 MSPDEBUG_CFLAGS = $(CFLAGS) $(READLINE_CFLAGS) $(PORTS_CFLAGS)\
  $(GCC_CFLAGS) $(INCLUDES) $(CONFIG_CFLAGS) $(OS_CFLAGS)
 
@@ -213,6 +213,7 @@ OBJ=\
     simio/simio_hwmult.o \
     simio/simio_gpio.o \
     simio/simio_console.o \
+    simio/simio_clock.o \
     ui/gdb.o \
     ui/rtools.o \
     ui/sym.o \

@@ -31,6 +31,7 @@
 #include "simio_hwmult.h"
 #include "simio_gpio.h"
 #include "simio_console.h"
+#include "simio_clock.h"
 
 static const struct simio_class *const class_db[] = {
 	&simio_tracer,
@@ -38,7 +39,8 @@ static const struct simio_class *const class_db[] = {
 	&simio_wdt,
 	&simio_hwmult,
 	&simio_gpio,
-	&simio_console
+	&simio_console,
+	&simio_clock,
 };
 
 /* Simulator data. We keep a list of devices on the bus, and the special
@@ -91,6 +93,20 @@ static struct simio_device *find_device(const char *name)
 		struct simio_device *dev = (struct simio_device *)n;
 
 		if (!strcasecmp(dev->name, name))
+			return dev;
+	}
+
+	return NULL;
+}
+
+static struct simio_device *find_device_of(const char *class_name)
+{
+	struct list_node *n;
+
+	for (n = device_list.next; n != &device_list; n = n->next) {
+		struct simio_device *dev = (struct simio_device *)n;
+
+		if (!strcasecmp(dev->type->name, class_name))
 			return dev;
 	}
 
@@ -419,14 +435,21 @@ void simio_step(uint16_t status_register, int cycles)
 {
 	int clocks[SIMIO_NUM_CLOCKS] = {0};
 	struct list_node *n;
-
-	aclk_counter += cycles;
+	struct simio_device *clock = find_device_of("clock");
 
 	clocks[SIMIO_MCLK] = cycles;
-	clocks[SIMIO_SMCLK] = cycles;
-	clocks[SIMIO_ACLK] = aclk_counter >> 8;
+	if (clock && clock->type->step) {
+		/* clock's step will update SIMIO_SMCLK and SIMIO_ACLK. */
+		clock->type->step(clock, status_register, clocks);
+	} else {
+		/* Default: SMCLK = MCLK, ACLK = MCLK / 256. */
+		aclk_counter += cycles;
 
-	aclk_counter &= 0xff;
+		clocks[SIMIO_SMCLK] = cycles;
+		clocks[SIMIO_ACLK] = aclk_counter >> 8;
+
+		aclk_counter &= 0xff;
+	}
 
 	if (status_register & MSP430_SR_CPUOFF)
 		clocks[SIMIO_MCLK] = 0;
